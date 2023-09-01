@@ -1,12 +1,15 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const sendGrid = require("@sendgrid/mail");
 const userService = require("../services/userService");
 const authService = require("../services/authService");
 const hashPassword = require("../utils/hashPassword");
 const dotenv = require("dotenv");
+const sendEmail = require("../services/emailService");
 dotenv.config();
 
 const salt = process.env.SALT;
+sendGrid.setApiKey(process.env.S_KEY)
 
 const validateSignup = (req) => {
   const { userName, email, password } = req.body;
@@ -179,6 +182,7 @@ exports.forgotPassword = async (req, res, next) => {
 
     const expiration = Date.now() + 3600000;
     await userService.updateResetToken(user, resetToken, expiration);
+    sendEmail({resetToken, email})
     res.status(200).json({ message: "Password reset link sent successfully" });
   } catch (error) {
     res
