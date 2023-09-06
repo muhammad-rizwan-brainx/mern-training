@@ -1,14 +1,13 @@
 const sendGrid = require("@sendgrid/mail");
-const dotenv = require("dotenv");
-dotenv.config();
-sendGrid.setApiKey(process.env.S_KEY)
+
+sendGrid.setApiKey(process.env.S_KEY);
 const sendEmail = async (options) => {
   const msg = {
     to: options.email,
     from: process.env.EMAIL,
     subject: "Password Reset Token",
     text: options.resetToken,
-  }
+  };
   sendGrid
     .send(msg)
     .then(() => {

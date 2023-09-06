@@ -1,8 +1,5 @@
 const taskService = require("../services/taskService");
 
-const dotenv = require("dotenv");
-dotenv.config();
-
 const root = process.env.ROOT;
 
 const validateTaskFields = (title, description) => {

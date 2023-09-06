@@ -4,69 +4,16 @@ const sendGrid = require("@sendgrid/mail");
 const userService = require("../services/userService");
 const authService = require("../services/authService");
 const hashPassword = require("../utils/hashPassword");
-const dotenv = require("dotenv");
 const sendEmail = require("../services/emailService");
-dotenv.config();
+const userValidate = require("../services/userVAlidationService");
 
 const salt = process.env.SALT;
 sendGrid.setApiKey(process.env.S_KEY)
 
-const validateSignup = (req) => {
-  const { userName, email, password } = req.body;
-  const errors = [];
-
-  if (!userName || userName.trim() === "") {
-    errors.push("Username is required");
-  }
-
-  if (!email || email.trim() === "") {
-    errors.push("Email is required");
-  } else if (!isValidEmail(email)) {
-    errors.push("Email is invalid");
-  }
-
-  if (!password || password.trim() === "") {
-    errors.push("Password is required");
-  } else if (password.length < 6) {
-    errors.push("Password should be at least 6 characters long");
-  }
-
-  return errors;
-};
-
-const validateLogin = (req) => {
-  const { email, password } = req.body;
-  const errors = [];
-
-  if (!email || email.trim() === "") {
-    errors.push("Email is required");
-  } else if (!isValidEmail(email)) {
-    errors.push("Email is invalid");
-  }
-
-  if (!password || password.trim() === "") {
-    errors.push("Password is required");
-  }
-
-  return errors;
-};
-
-const validateForgotPassword = (req) => {
-  const { email } = req.body;
-  const errors = [];
-
-  if (!email || email.trim() === "") {
-    errors.push("Email is required");
-  } else if (!isValidEmail(email)) {
-    errors.push("Email is invalid");
-  }
-
-  return errors;
-};
 
 exports.signup = async (req, res, next) => {
   try {
-    const validationErrors = validateSignup(req);
+    const validationErrors = userValidate.validateSignup(req);
 
     if (validationErrors.length > 0) {
       return res.status(422).json({ errors: validationErrors });
@@ -94,7 +41,7 @@ exports.signup = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    const validationErrors = validateLogin(req);
+    const validationErrors = userValidate.validateLogin(req);
 
     if (validationErrors.length > 0) {
       return res.status(422).json({ errors: validationErrors });
@@ -165,7 +112,7 @@ exports.changePassword = async (req, res, next) => {
 
 exports.forgotPassword = async (req, res, next) => {
   try {
-    const validationErrors = validateForgotPassword(req);
+    const validationErrors = userValidate.validateForgotPassword(req);
 
     if (validationErrors.length > 0) {
       return res.status(422).json({ errors: validationErrors });
@@ -191,7 +138,3 @@ exports.forgotPassword = async (req, res, next) => {
   }
 };
 
-const isValidEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
