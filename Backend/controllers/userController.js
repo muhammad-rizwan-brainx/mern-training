@@ -1,84 +1,24 @@
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+const createToken = require("../utils/createToken");
 const userService = require("../services/userService");
-const authService = require("../services/authService");
-const hashPassword = require("../utils/hashPassword");
-const dotenv = require("dotenv");
-dotenv.config();
-
-const salt = process.env.SALT;
-
-const validateSignup = (req) => {
-  const { userName, email, password } = req.body;
-  const errors = [];
-
-  if (!userName || userName.trim() === "") {
-    errors.push("Username is required");
-  }
-
-  if (!email || email.trim() === "") {
-    errors.push("Email is required");
-  } else if (!isValidEmail(email)) {
-    errors.push("Email is invalid");
-  }
-
-  if (!password || password.trim() === "") {
-    errors.push("Password is required");
-  } else if (password.length < 6) {
-    errors.push("Password should be at least 6 characters long");
-  }
-
-  return errors;
-};
-
-const validateLogin = (req) => {
-  const { email, password } = req.body;
-  const errors = [];
-
-  if (!email || email.trim() === "") {
-    errors.push("Email is required");
-  } else if (!isValidEmail(email)) {
-    errors.push("Email is invalid");
-  }
-
-  if (!password || password.trim() === "") {
-    errors.push("Password is required");
-  }
-
-  return errors;
-};
-
-const validateForgotPassword = (req) => {
-  const { email } = req.body;
-  const errors = [];
-
-  if (!email || email.trim() === "") {
-    errors.push("Email is required");
-  } else if (!isValidEmail(email)) {
-    errors.push("Email is invalid");
-  }
-
-  return errors;
-};
+const sendEmail = require("../services/emailService");
+const userValidate = require("../services/userVAlidationService");
 
 exports.signup = async (req, res, next) => {
   try {
-    const validationErrors = validateSignup(req);
-
+    const{userName, email, password} = req.body;
+    const validationErrors = userValidate.validateSignupCredentials(userName, email, password);
     if (validationErrors.length > 0) {
       return res.status(422).json({ errors: validationErrors });
     }
-
-    const existingUser = await userService.checkExistingUser(req.body.email);
-
-    if (existingUser) {
+    const userExists = await userService.findUser({email});
+    console.log(userExists)
+    if (userExists) {
       return res.status(422).json({
         Message: "Mail Exists Already",
       });
     }
-
-    await userService.createUser(req.body);
-
+    await userService.createUser(userName, email, password);
     res.status(201).json({
       Message: "User Created",
     });
@@ -91,46 +31,25 @@ exports.signup = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    const validationErrors = validateLogin(req);
-
+    const validationErrors = userValidate.validateLoginCredentials(req);
     if (validationErrors.length > 0) {
       return res.status(422).json({ errors: validationErrors });
     }
-
-    const email = req.body.email;
-    const user = await userService.findUserByEmail(email);
-
+    const {email, password} = req.body;
+    const user = await userService.findUser({email});
     if (!user) {
       return res.status(401).json({
         Message: "User Doesnt Exist",
       });
     }
-
-    const respons = await bcrypt.compare(req.body.password, user.password);
-
+    const respons = await bcrypt.compare(password, user.password);
     if (respons) {
-      const token = jwt.sign(
-        {
-          email: user.email,
-          id: user._id,
-        },
-        salt,
-        {
-          expiresIn: "1h",
-        }
-      );
-
-      const tokenCreationResult = await authService.createAuthToken(
-        email,
-        token
-      );
-
+      const token = await createToken.createToken(email, user._id)
       return res.status(200).json({
         message: "successful",
         token: token,
       });
     }
-
     res.status(401).json({
       Message: "Auth Fail",
     });
@@ -144,15 +63,17 @@ exports.login = async (req, res, next) => {
 exports.changePassword = async (req, res, next) => {
   try {
     const { resetPasswordToken, newPassword } = req.body;
-    const user = await userService.findUserByResetToken(resetPasswordToken);
+    const user = await userService.findUser({resetPasswordToken});
     if (!user) {
       return res.status(400).json({
         message: "Invalid or expired reset token",
       });
     }
-    await userService.updatePassword(user, password);
-
-    res.status(200).json({ message: "Password changed successfully" });
+    await userService.updatePassword(user, newPassword);
+    res.status(200).json(
+      { 
+        message: "Password changed successfully"
+       });
   } catch (error) {
     res
       .status(500)
@@ -162,23 +83,19 @@ exports.changePassword = async (req, res, next) => {
 
 exports.forgotPassword = async (req, res, next) => {
   try {
-    const validationErrors = validateForgotPassword(req);
-
+    const validationErrors = userValidate.validateForgotPasswordCredentials(req);
     if (validationErrors.length > 0) {
       return res.status(422).json({ errors: validationErrors });
     }
     const { email } = req.body;
-    const user = await userService.findUserByEmail(email);
-
+    const user = await userService.findUser({email});
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const resetToken = jwt.sign({ userId: user._id }, salt, {
-      expiresIn: "1h",
-    });
-
+    const resetToken = await createToken.createToken(email, user._id)
     const expiration = Date.now() + 3600000;
     await userService.updateResetToken(user, resetToken, expiration);
+    sendEmail({resetToken, email})
     res.status(200).json({ message: "Password reset link sent successfully" });
   } catch (error) {
     res
@@ -187,7 +104,3 @@ exports.forgotPassword = async (req, res, next) => {
   }
 };
 
-const isValidEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
