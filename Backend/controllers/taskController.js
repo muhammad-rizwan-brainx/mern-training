@@ -3,7 +3,6 @@ const validationService = require("../services/taskValidationService");
 
 const root = process.env.ROOT;
 
-
 exports.getAllTasks = async (req, res, next) => {
   try {
     const docs = await taskService.getAllTasks();

@@ -11,7 +11,7 @@ exports.signup = async (req, res, next) => {
     if (validationErrors.length > 0) {
       return res.status(422).json({ errors: validationErrors });
     }
-    const userExists = await userService.findUser(email);
+    const userExists = await userService.findUser({email});
     console.log(userExists)
     if (userExists) {
       return res.status(422).json({
@@ -36,7 +36,7 @@ exports.login = async (req, res, next) => {
       return res.status(422).json({ errors: validationErrors });
     }
     const {email, password} = req.body;
-    const user = await userService.findUser(email);
+    const user = await userService.findUser({email});
     if (!user) {
       return res.status(401).json({
         Message: "User Doesnt Exist",
@@ -63,7 +63,7 @@ exports.login = async (req, res, next) => {
 exports.changePassword = async (req, res, next) => {
   try {
     const { resetPasswordToken, newPassword } = req.body;
-    const user = await userService.findUserWithResetToken(resetPasswordToken);
+    const user = await userService.findUser({resetPasswordToken});
     if (!user) {
       return res.status(400).json({
         message: "Invalid or expired reset token",
@@ -88,7 +88,7 @@ exports.forgotPassword = async (req, res, next) => {
       return res.status(422).json({ errors: validationErrors });
     }
     const { email } = req.body;
-    const user = await userService.findUser(email);
+    const user = await userService.findUser({email});
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

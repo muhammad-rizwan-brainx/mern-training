@@ -10,8 +10,8 @@ const createUser = async (userName, email, password) => {
   return await user.save();
 };
 
-const findUser = async (email) => {
-  return await User.findOne({ email });
+const findUser = async (condition) => {
+  return await User.findOne(condition);
 };
 
 const updatePassword = async (user, newPassword) => {
@@ -21,11 +21,6 @@ const updatePassword = async (user, newPassword) => {
   return await user.save();
 };
 
-const findUserWithResetToken = async(resetPasswordToken)=>{
-  return await User.findOne({ resetPasswordToken });
-}
-
-
 const updateResetToken = async (user, resetToken, expiration) => {
   user.resetPasswordToken = resetToken;
   user.resetPasswordExpires = expiration;
@@ -33,7 +28,6 @@ const updateResetToken = async (user, resetToken, expiration) => {
 };
 
 module.exports = {
-  findUserWithResetToken,
   updateResetToken,
   updatePassword,
   findUser,
