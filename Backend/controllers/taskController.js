@@ -10,7 +10,6 @@ exports.getAllTasks = async (req, res, next) => {
     const response = {
       count: docs.length,
       tasks: docs.map((doc) => {
-        console.log(doc.isCompleted);
         return {
           title: doc.title,
           description: doc.description,
@@ -25,7 +24,6 @@ exports.getAllTasks = async (req, res, next) => {
     };
     res.status(200).json(response);
   } catch (err) {
-    console.log(err);
     res.status(500).json({
       error: err,
     });

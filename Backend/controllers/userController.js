@@ -4,8 +4,6 @@ const userService = require("../services/userService");
 const sendEmail = require("../services/emailService");
 const userValidate = require("../services/userVAlidationService");
 
-const salt = process.env.SALT;
-
 exports.signup = async (req, res, next) => {
   try {
     const{userName, email, password} = req.body;
@@ -14,6 +12,7 @@ exports.signup = async (req, res, next) => {
       return res.status(422).json({ errors: validationErrors });
     }
     const userExists = await userService.findUser(email);
+    console.log(userExists)
     if (userExists) {
       return res.status(422).json({
         Message: "Mail Exists Already",
@@ -45,7 +44,7 @@ exports.login = async (req, res, next) => {
     }
     const respons = await bcrypt.compare(password, user.password);
     if (respons) {
-      const token = createToken(email, user_id)
+      const token = await createToken.createToken(email, user._id)
       return res.status(200).json({
         message: "successful",
         token: token,
@@ -64,7 +63,7 @@ exports.login = async (req, res, next) => {
 exports.changePassword = async (req, res, next) => {
   try {
     const { resetPasswordToken, newPassword } = req.body;
-    const user = await userService.findUser(resetPasswordToken);
+    const user = await userService.findUserWithResetToken(resetPasswordToken);
     if (!user) {
       return res.status(400).json({
         message: "Invalid or expired reset token",
@@ -84,7 +83,7 @@ exports.changePassword = async (req, res, next) => {
 
 exports.forgotPassword = async (req, res, next) => {
   try {
-    const validationErrors = userValidate.validateForgotPassword(req);
+    const validationErrors = userValidate.validateForgotPasswordCredentials(req);
     if (validationErrors.length > 0) {
       return res.status(422).json({ errors: validationErrors });
     }
@@ -93,7 +92,7 @@ exports.forgotPassword = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const resetToken = createToken(email, user._id)
+    const resetToken = await createToken.createToken(email, user._id)
     const expiration = Date.now() + 3600000;
     await userService.updateResetToken(user, resetToken, expiration);
     sendEmail({resetToken, email})
