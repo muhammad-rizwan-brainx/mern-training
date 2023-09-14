@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-
 const salt = process.env.SALT;
 
 module.exports = (req, res, next) => {
