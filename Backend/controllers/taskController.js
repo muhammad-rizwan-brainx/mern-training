@@ -1,26 +1,10 @@
 const taskService = require("../services/taskService");
-
 const validationService = require("../services/taskValidationService");
-
 const root = process.env.ROOT;
 
 exports.getAllTasks = async (req, res, next) => {
   try {
     const docs = await taskService.getAllTasks();
-    const response = {
-      count: docs.length,
-      tasks: docs.map((doc) => {
-
-
-
-const root = process.env.ROOT;
-
-
-
-exports.getAllTasks = async (req, res, next) => {
-  try {
-    const docs = await taskService.getAllTasks();
-
     const response = {
       count: docs.length,
       tasks: docs.map((doc) => {
@@ -36,10 +20,6 @@ exports.getAllTasks = async (req, res, next) => {
         };
       }),
     };
-
-    res.status(200).json(response);
-  } catch (err) {
-
     res.status(200).json(response);
   } catch (err) {
     res.status(500).json({
@@ -55,12 +35,6 @@ exports.addTask = async (req, res, next) => {
       throw "Invalid task fields.";
     }
     const result = await taskService.addTask(title, description, isCompleted);
-    console.log(isCompleted);
-    if (!validateTaskFields(title, description)) {
-      throw "Invalid task fields.";
-    }
-    const result = await taskService.addTask(title, description, isCompleted);
-
     res.status(201).json({
       message: "Task Added",
       Task: {
@@ -108,7 +82,7 @@ exports.updateTask = async (req, res, next) => {
     } else {
       throw "Task doesn't exist";
     }
-  } catch (err) {
+  }} catch (err) {
     res.status(500).json({
       error: err,
     });

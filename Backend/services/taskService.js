@@ -6,13 +6,11 @@ exports.getAllTasks = () => {
 };
 
 exports.addTask = async (title, description, isCompleted) => {
-  console.log(isCompleted)
   const detailsTask = new Task({ 
-    title: title,
-    description: description,
-    isCompleted: isCompleted,
+    title,
+    description,
+    isCompleted
   });
-  console.log(detailsTask)
   return await detailsTask.save();
 };
 

@@ -12,7 +12,6 @@ exports.signup = async (req, res, next) => {
       return res.status(422).json({ errors: validationErrors });
     }
     const userExists = await userService.findUser({email});
-    console.log(userExists)
     if (userExists) {
       return res.status(422).json({
         Message: "Mail Exists Already",
