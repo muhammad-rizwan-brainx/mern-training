@@ -1,18 +1,12 @@
 const taskService = require("../services/taskService");
+const validationService = require("../services/taskValidationService");
 
 const root = process.env.ROOT;
 
-const validateTaskFields = (title, description) => {
-  if (!title || !description) {
-    return false;
-  }
-  return true;
-};
 
 exports.getAllTasks = async (req, res, next) => {
   try {
     const docs = await taskService.getAllTasks();
-
     const response = {
       count: docs.length,
       tasks: docs.map((doc) => {
@@ -29,7 +23,6 @@ exports.getAllTasks = async (req, res, next) => {
         };
       }),
     };
-
     res.status(200).json(response);
   } catch (err) {
     console.log(err);
@@ -42,12 +35,10 @@ exports.getAllTasks = async (req, res, next) => {
 exports.addTask = async (req, res, next) => {
   try {
     const { title, description, isCompleted } = req.body;
-    console.log(isCompleted);
-    if (!validateTaskFields(title, description)) {
+    if (!validationService.validateTaskInputs(title, description)) {
       throw "Invalid task fields.";
     }
     const result = await taskService.addTask(title, description, isCompleted);
-
     res.status(201).json({
       message: "Task Added",
       Task: {
@@ -83,7 +74,7 @@ exports.updateTask = async (req, res, next) => {
     const id = req.params.taskID;
     const payload = req.body;
     if (payload.title || payload.description) {
-      if (!validateTaskFields(payload.title, payload.description)) {
+      if (!validationService.validateTaskInputs(payload.title, payload.description)) {
         throw "Invalid task fields.";
       }
     }
@@ -107,7 +98,6 @@ exports.deleteTask = async (req, res, next) => {
     const task = await taskService.getTask(id);
     if (task) {
       const result = await taskService.deleteTask(id);
-
       res.status(200).json({
         message: "Task deleted",
         result: result,

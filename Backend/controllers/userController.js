@@ -1,34 +1,25 @@
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const sendGrid = require("@sendgrid/mail");
+const createToken = require("../utils/createToken");
 const userService = require("../services/userService");
-const authService = require("../services/authService");
-const hashPassword = require("../utils/hashPassword");
 const sendEmail = require("../services/emailService");
 const userValidate = require("../services/userVAlidationService");
 
 const salt = process.env.SALT;
-sendGrid.setApiKey(process.env.S_KEY)
-
 
 exports.signup = async (req, res, next) => {
   try {
-    const validationErrors = userValidate.validateSignup(req);
-
+    const{userName, email, password} = req.body;
+    const validationErrors = userValidate.validateSignupCredentials(userName, email, password);
     if (validationErrors.length > 0) {
       return res.status(422).json({ errors: validationErrors });
     }
-
-    const existingUser = await userService.checkExistingUser(req.body.email);
-
-    if (existingUser) {
+    const userExists = await userService.findUser(email);
+    if (userExists) {
       return res.status(422).json({
         Message: "Mail Exists Already",
       });
     }
-
-    await userService.createUser(req.body);
-
+    await userService.createUser(userName, email, password);
     res.status(201).json({
       Message: "User Created",
     });
@@ -41,46 +32,25 @@ exports.signup = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    const validationErrors = userValidate.validateLogin(req);
-
+    const validationErrors = userValidate.validateLoginCredentials(req);
     if (validationErrors.length > 0) {
       return res.status(422).json({ errors: validationErrors });
     }
-
-    const email = req.body.email;
-    const user = await userService.findUserByEmail(email);
-
+    const {email, password} = req.body;
+    const user = await userService.findUser(email);
     if (!user) {
       return res.status(401).json({
         Message: "User Doesnt Exist",
       });
     }
-
-    const respons = await bcrypt.compare(req.body.password, user.password);
-
+    const respons = await bcrypt.compare(password, user.password);
     if (respons) {
-      const token = jwt.sign(
-        {
-          email: user.email,
-          id: user._id,
-        },
-        salt,
-        {
-          expiresIn: "1h",
-        }
-      );
-
-      const tokenCreationResult = await authService.createAuthToken(
-        email,
-        token
-      );
-
+      const token = createToken(email, user_id)
       return res.status(200).json({
         message: "successful",
         token: token,
       });
     }
-
     res.status(401).json({
       Message: "Auth Fail",
     });
@@ -94,15 +64,17 @@ exports.login = async (req, res, next) => {
 exports.changePassword = async (req, res, next) => {
   try {
     const { resetPasswordToken, newPassword } = req.body;
-    const user = await userService.findUserByResetToken(resetPasswordToken);
+    const user = await userService.findUser(resetPasswordToken);
     if (!user) {
       return res.status(400).json({
         message: "Invalid or expired reset token",
       });
     }
-    await userService.updatePassword(user, password);
-
-    res.status(200).json({ message: "Password changed successfully" });
+    await userService.updatePassword(user, newPassword);
+    res.status(200).json(
+      { 
+        message: "Password changed successfully"
+       });
   } catch (error) {
     res
       .status(500)
@@ -113,20 +85,15 @@ exports.changePassword = async (req, res, next) => {
 exports.forgotPassword = async (req, res, next) => {
   try {
     const validationErrors = userValidate.validateForgotPassword(req);
-
     if (validationErrors.length > 0) {
       return res.status(422).json({ errors: validationErrors });
     }
     const { email } = req.body;
-    const user = await userService.findUserByEmail(email);
-
+    const user = await userService.findUser(email);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const resetToken = jwt.sign({ userId: user._id }, salt, {
-      expiresIn: "1h",
-    });
-
+    const resetToken = createToken(email, user._id)
     const expiration = Date.now() + 3600000;
     await userService.updateResetToken(user, resetToken, expiration);
     sendEmail({resetToken, email})
