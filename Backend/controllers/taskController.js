@@ -34,14 +34,15 @@ exports.addTask = async (req, res, next) => {
     if (!validationService.validateTaskInputs(title, description)) {
       throw "Invalid task fields.";
     }
-    const result = await taskService.addTask(title, description, isCompleted);
+
+    const result = await taskService.addTask({title, description, isCompleted});
+
+  
+
     res.status(201).json({
       message: "Task Added",
       Task: {
-        title: result.title,
-        description: result.description,
-        isconnected: result.isCompleted,
-        id: result._id,
+        ...result,
         request: {
           type: "GET",
           url: root + "/tasks/" + result._id,
@@ -71,9 +72,7 @@ exports.updateTask = async (req, res, next) => {
     const payload = req.body;
     if (payload.title || payload.description) {
       if (!validationService.validateTaskInputs(payload.title, payload.description)) {
-      if (!validateTaskFields(payload.title, payload.description)) {
         throw "Invalid task fields.";
-      }
     }
     const task = await taskService.getTask(id);
     if (task) {

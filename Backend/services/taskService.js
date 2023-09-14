@@ -2,26 +2,21 @@ const mongoose = require("mongoose");
 const Task = require("../models/taskModel");
 
 exports.getAllTasks = () => {
-  return Task.find().exec();
+  return Task.find();
 };
 
-exports.addTask = async (title, description, isCompleted) => {
-  const detailsTask = new Task({ 
-    title,
-    description,
-    isCompleted
-  });
-  return await detailsTask.save();
+exports.addTask = async (data) => {
+  return await Task.create(data);
 };
 
 exports.getTask = async (id) => {
-  return await Task.findById(id).select("title description isCompleted").exec();
+  return await Task.findById(id).select("title description isCompleted");
 };
 
 exports.updateTask = async (id, payload) => {
-  return await Task.updateOne({ _id: id }, { $set: payload }).exec();
+  return await Task.updateOne({ _id: id }, { $set: payload });
 };
 
 exports.deleteTask = async (id) => {
-  return await Task.deleteOne({ _id: id }).exec();
+  return await Task.deleteOne({ _id: id });
 };

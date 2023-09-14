@@ -21,8 +21,8 @@ const validateSignupCredentials = (userName, email, password) => {
   return errors;
 };
 
-const validateLoginCredentials = (req) => {
-  const { email, password } = req.body;
+const validateLoginCredentials = (data) => {
+  const { email, password } = data;
   const errors = [];
   if (!email || email.trim() === "") {
     errors.push("Email is required");
@@ -35,8 +35,8 @@ const validateLoginCredentials = (req) => {
   return errors;
 };
 
-const validateForgotPasswordCredentials = (req) => {
-  const { email } = req.body;
+const validateForgotPasswordCredentials = (data) => {
+  const { email } = data;
   const errors = [];
   if (!email || email.trim() === "") {
     errors.push("Email is required");

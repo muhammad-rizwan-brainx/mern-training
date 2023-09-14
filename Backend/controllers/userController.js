@@ -17,7 +17,7 @@ exports.signup = async (req, res, next) => {
         Message: "Mail Exists Already",
       });
     }
-    await userService.createUser(userName, email, password);
+    await userService.createUser({userName, email, password});
     res.status(201).json({
       Message: "User Created",
     });
@@ -30,7 +30,7 @@ exports.signup = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    const validationErrors = userValidate.validateLoginCredentials(req);
+    const validationErrors = userValidate.validateLoginCredentials(req.body);
     if (validationErrors.length > 0) {
       return res.status(422).json({ errors: validationErrors });
     }
@@ -82,7 +82,7 @@ exports.changePassword = async (req, res, next) => {
 
 exports.forgotPassword = async (req, res, next) => {
   try {
-    const validationErrors = userValidate.validateForgotPasswordCredentials(req);
+    const validationErrors = userValidate.validateForgotPasswordCredentials(req.body);
     if (validationErrors.length > 0) {
       return res.status(422).json({ errors: validationErrors });
     }
@@ -94,7 +94,7 @@ exports.forgotPassword = async (req, res, next) => {
     const resetToken = await createToken.createToken(email, user._id)
     const expiration = Date.now() + 3600000;
     await userService.updateResetToken(user, resetToken, expiration);
-    sendEmail({resetToken, email})
+    await sendEmail({resetToken, email})
     res.status(200).json({ message: "Password reset link sent successfully" });
   } catch (error) {
     res

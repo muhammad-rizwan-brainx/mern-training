@@ -1,13 +1,7 @@
 const User = require("../models/userModel");
 
-const createUser = async (userName, email, password) => {
-  const user = new User({
-    userName,
-    email,
-    password
-  });
-
-  return await user.save();
+const createUser = async (data) => {
+  return await User.create(data);
 };
 
 const findUser = async (condition) => {
