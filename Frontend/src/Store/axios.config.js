@@ -1,5 +1,8 @@
 import axios from 'axios';
-const instance = axios.create({ 
-});
 
-export default instance;
+import {LOCAL_APIS} from './../constants'
+
+//  export your instance
+export const APIS = axios.create({
+  baseURL: `${LOCAL_APIS}`,
+});
