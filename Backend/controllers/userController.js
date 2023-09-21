@@ -7,9 +7,11 @@ const userValidate = require("../services/userVAlidationService");
 exports.signup = async (req, res, next) => {
   try {
     const{userName, email, password} = req.body;
-    const validationErrors = userValidate.validateSignupCredentials(userName, email, password);
-    if (validationErrors.length > 0) {
-      return res.status(422).json({ errors: validationErrors });
+    if (!userName || !email || !password) {
+      return res.status(422).json({ error: "Recquired fields are missing" });
+    }
+    if (!userValidate.isValidEmail(email)) {
+      return res.status(422).json({ error: "Please provide a valid email" });
     }
     const userExists = await userService.findUser({email});
     if (userExists) {
