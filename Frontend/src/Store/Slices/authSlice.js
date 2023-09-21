@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { signup } from '../Thunks/useSignup';
+import { signup } from '../Thunks/authThunk';
 
 const authSlice = createSlice({
   name: 'auth',
@@ -23,6 +23,26 @@ const authSlice = createSlice({
       console.log('fulfilled');
     });
     builder.addCase(signup.rejected, (state, action) => {
+      state.isLoading = false;
+      state.errorMsg = action.payload?.message;
+      console.log('rejected', action.payload);
+    });
+
+  },
+  extraReducers(builder) {
+    //login reducers
+    builder.addCase(login.pending, (state, action) => {
+      console.log('pending');
+      state.successMsg = '';
+      state.isLoading = true;
+    });
+    builder.addCase(login.fulfilled, (state, action) => {
+      state.isLoading = false;
+      localStorage.setItem("access_token",action.payload)
+      state.successMsg = action.payload?.message;
+      console.log('fulfilled');
+    });
+    builder.addCase(login.rejected, (state, action) => {
       state.isLoading = false;
       state.errorMsg = action.payload?.message;
       console.log('rejected', action.payload);
