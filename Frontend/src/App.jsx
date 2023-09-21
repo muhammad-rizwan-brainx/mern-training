@@ -10,11 +10,12 @@ import Pending from "./components/Pending/Pending";
 import Profile from "./components/Profile/Profile";
 import Signup from "./components/Auth/SignUp/Signup";
 import logo from "./assets/logo.png";
+import EditTask from "./components/EditTask/EditTask";
 function App() {
   return (
     <>
           <Routes>
-            <Route index element={<Signup />} />
+            <Route index element={<EditTask />} />
           </Routes>
     </>
   );

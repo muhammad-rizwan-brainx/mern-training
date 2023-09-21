@@ -2,7 +2,7 @@ import React from "react";
 import { useState } from "react";
 import {useDispatch} from 'react-redux'
 import "./Signup.css";
-import { signup } from "../../../Store/Thunks/useSignup";
+import { signup } from "../../../Store/Thunks/authThunk";
 
 function Signup() {
   const dispatch = useDispatch();
