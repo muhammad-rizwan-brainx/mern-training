@@ -21,10 +21,10 @@ const signup = createAsyncThunk("users/signup", async (data, thunkAPI) => {
 });
 
 
-const login = createAsyncThunk("users/signup", async (data, thunkAPI) => {
+const login = createAsyncThunk("users/login", async (data, thunkAPI) => {
   console.log("inside login thunk", data);
   try {
-    const response = await APIS.post(`/users/signup`, data);
+    const response = await APIS.post(`/users/login`, data);
 
     return response.data;
   } catch (error) {
